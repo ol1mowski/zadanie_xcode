@@ -23,7 +23,7 @@ public class QueryLog {
     @Column(nullable = false, length = 3)
     private String currencyCode;
 
-    @Column
+    @Column(name = "rate_value")
     private Double value;
 
     @Column(nullable = false)

@@ -33,12 +33,14 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let r of requests()">
+        @for (r of requests(); track r) {
+        <tr>
           <td>{{ r.currency }}</td>
           <td>{{ r.name }}</td>
           <td>{{ r.date | date:'short' }}</td>
           <td>{{ r.value }}</td>
         </tr>
+        }
       </tbody>
     </table>
     } @else {
