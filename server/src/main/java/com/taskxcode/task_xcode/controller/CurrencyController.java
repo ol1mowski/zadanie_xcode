@@ -39,5 +39,3 @@ public class CurrencyController {
         return ResponseEntity.ok(currencyService.getAllRequests());
     }
 }
-
-
