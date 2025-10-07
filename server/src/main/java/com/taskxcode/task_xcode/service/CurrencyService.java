@@ -1,9 +1,12 @@
 package com.taskxcode.task_xcode.service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.taskxcode.task_xcode.dto.CurrencyQueryLogResponse;
 import com.taskxcode.task_xcode.dto.CurrencyRequest;
 import com.taskxcode.task_xcode.dto.CurrencyResponse;
 import com.taskxcode.task_xcode.entity.QueryLog;
@@ -29,6 +32,17 @@ public class CurrencyService {
         log.setCreatedAt(OffsetDateTime.now());
         queryLogRepository.save(log);
         return new CurrencyResponse(rate);
+    }
+
+    public List<CurrencyQueryLogResponse> getAllRequests() {
+        return queryLogRepository.findAll().stream().map(entity -> {
+            CurrencyQueryLogResponse dto = new CurrencyQueryLogResponse();
+            dto.setCurrency(entity.getCurrencyCode());
+            dto.setName(entity.getRequesterName());
+            dto.setDate(entity.getCreatedAt());
+            dto.setValue(entity.getValue());
+            return dto;
+        }).collect(Collectors.toList());
     }
 }
 

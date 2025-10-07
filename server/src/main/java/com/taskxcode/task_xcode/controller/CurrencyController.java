@@ -1,11 +1,15 @@
 package com.taskxcode.task_xcode.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.taskxcode.task_xcode.dto.CurrencyQueryLogResponse;
 import com.taskxcode.task_xcode.dto.CurrencyRequest;
 import com.taskxcode.task_xcode.dto.CurrencyResponse;
 import com.taskxcode.task_xcode.service.CurrencyService;
@@ -26,6 +30,11 @@ public class CurrencyController {
     public ResponseEntity<CurrencyResponse> getCurrentCurrency(@Valid @RequestBody CurrencyRequest request) {
         CurrencyResponse response = currencyService.getCurrentValue(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/requests")
+    public ResponseEntity<List<CurrencyQueryLogResponse>> getAllRequests() {
+        return ResponseEntity.ok(currencyService.getAllRequests());
     }
 }
 
