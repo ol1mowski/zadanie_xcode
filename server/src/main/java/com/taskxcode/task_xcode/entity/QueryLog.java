@@ -1,4 +1,4 @@
-package com.taskxcode.task_xcode.currency.entity;
+package com.taskxcode.task_xcode.entity;
 
 import java.time.OffsetDateTime;
 

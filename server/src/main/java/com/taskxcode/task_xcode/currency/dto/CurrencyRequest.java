@@ -1,4 +1,4 @@
-package com.taskxcode.task_xcode.dto;
+package com.taskxcode.task_xcode.currency.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

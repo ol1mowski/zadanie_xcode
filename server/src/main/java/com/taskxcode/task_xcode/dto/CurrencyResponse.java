@@ -1,4 +1,4 @@
-package com.taskxcode.task_xcode.currency.dto;
+package com.taskxcode.task_xcode.dto;
 
 public class CurrencyResponse {
 
