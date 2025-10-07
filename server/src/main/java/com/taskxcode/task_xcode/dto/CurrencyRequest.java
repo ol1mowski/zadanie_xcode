@@ -26,5 +26,3 @@ public class CurrencyRequest {
         this.name = name;
     }
 }
-
-

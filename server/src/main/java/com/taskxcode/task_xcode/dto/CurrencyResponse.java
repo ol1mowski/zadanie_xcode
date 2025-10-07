@@ -19,5 +19,3 @@ public class CurrencyResponse {
         this.value = value;
     }
 }
-
-

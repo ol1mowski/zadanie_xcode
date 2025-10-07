@@ -6,5 +6,3 @@ import com.taskxcode.task_xcode.entity.QueryLog;
 
 public interface QueryLogRepository extends JpaRepository<QueryLog, Long> {
 }
-
-

@@ -65,5 +65,3 @@ public class QueryLog {
         this.createdAt = createdAt;
     }
 }
-
-
