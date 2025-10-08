@@ -1,5 +1,6 @@
 package com.taskxcode.task_xcode.dto;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public class CurrencyQueryLogResponse {
@@ -7,7 +8,7 @@ public class CurrencyQueryLogResponse {
     private String currency;
     private String name;
     private OffsetDateTime date;
-    private Double value;
+    private BigDecimal value;
 
     public String getCurrency() {
         return currency;
@@ -33,11 +34,11 @@ public class CurrencyQueryLogResponse {
         this.date = date;
     }
 
-    public Double getValue() {
+    public BigDecimal getValue() {
         return value;
     }
 
-    public void setValue(Double value) {
+    public void setValue(BigDecimal value) {
         this.value = value;
     }
 }

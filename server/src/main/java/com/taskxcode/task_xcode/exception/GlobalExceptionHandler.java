@@ -50,11 +50,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
     
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<Map<String, Object>> handleExternalApi(ExternalApiException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "External API error");
+        body.put("message", "Failed to fetch currency data. Please try again later.");
+        body.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+    }
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("error", "Internal server error");
-        body.put("message", ex.getMessage());
+        body.put("message", "An unexpected error occurred");
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }

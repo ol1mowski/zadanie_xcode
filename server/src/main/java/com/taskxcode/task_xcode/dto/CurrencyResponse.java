@@ -1,21 +1,23 @@
 package com.taskxcode.task_xcode.dto;
 
+import java.math.BigDecimal;
+
 public class CurrencyResponse {
 
-    private double value;
+    private BigDecimal value;
 
     public CurrencyResponse() {
     }
 
-    public CurrencyResponse(double value) {
+    public CurrencyResponse(BigDecimal value) {
         this.value = value;
     }
 
-    public double getValue() {
+    public BigDecimal getValue() {
         return value;
     }
 
-    public void setValue(double value) {
+    public void setValue(BigDecimal value) {
         this.value = value;
     }
 }

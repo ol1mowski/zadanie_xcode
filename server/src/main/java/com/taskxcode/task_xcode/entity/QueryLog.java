@@ -1,5 +1,6 @@
 package com.taskxcode.task_xcode.entity;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 import jakarta.persistence.Column;
@@ -7,10 +8,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "currency_query_log")
+@Table(name = "currency_query_log", indexes = {
+    @Index(name = "idx_currency_code", columnList = "currencyCode"),
+    @Index(name = "idx_created_at", columnList = "createdAt")
+})
 public class QueryLog {
 
     @Id
@@ -23,8 +28,8 @@ public class QueryLog {
     @Column(nullable = false, length = 3)
     private String currencyCode;
 
-    @Column(name = "rate_value")
-    private Double value;
+    @Column(name = "rate_value", precision = 19, scale = 4)
+    private BigDecimal value;
 
     @Column(nullable = false)
     private OffsetDateTime createdAt;
@@ -49,11 +54,11 @@ public class QueryLog {
         this.currencyCode = currencyCode;
     }
 
-    public Double getValue() {
+    public BigDecimal getValue() {
         return value;
     }
 
-    public void setValue(Double value) {
+    public void setValue(BigDecimal value) {
         this.value = value;
     }
 
