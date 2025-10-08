@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { FormsModule } from '@angular/forms';
 import { AppComponent } from './app';
 import { ApiService } from './api.service';
 import { of, throwError } from 'rxjs';
+import { CurrencyRequestDto } from './models/currency.models';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -15,7 +15,7 @@ describe('AppComponent', () => {
     const apiServiceSpy = jasmine.createSpyObj('ApiService', ['getCurrentValue', 'getRequests']);
 
     await TestBed.configureTestingModule({
-      imports: [AppComponent, FormsModule],
+      imports: [AppComponent],
       providers: [
         { provide: ApiService, useValue: apiServiceSpy },
         provideHttpClient(),
@@ -33,11 +33,11 @@ describe('AppComponent', () => {
   });
 
   it('should have default values', () => {
-    expect(component.currency()).toBe('EUR');
-    expect(component.name()).toBe('Jan Nowak');
     expect(component.loading()).toBe(false);
     expect(component.error()).toBeNull();
     expect(component.result()).toBeNull();
+    expect(component.loadingRequests()).toBe(false);
+    expect(component.requests()).toEqual([]);
   });
 
   it('should load requests on init', () => {
@@ -59,7 +59,11 @@ describe('AppComponent', () => {
     expect(component.totalElements()).toBe(1);
   });
 
-  it('should submit form and get currency value', (done) => {
+  it('should handle form submission', (done) => {
+    const mockRequest: CurrencyRequestDto = {
+      currency: 'USD',
+      name: 'John Doe'
+    };
     const mockResponse = { value: 4.25 };
     const mockPageResponse = {
       content: [],
@@ -74,33 +78,23 @@ describe('AppComponent', () => {
     apiService.getCurrentValue.and.returnValue(of(mockResponse));
     apiService.getRequests.and.returnValue(of(mockPageResponse));
 
-    const mockForm = { valid: true } as any;
-    component.currency.set('USD');
-    component.name.set('John Doe');
-
-    component.submit(mockForm);
+    component.onSubmit(mockRequest);
 
     setTimeout(() => {
-      expect(apiService.getCurrentValue).toHaveBeenCalledWith({
-        currency: 'USD',
-        name: 'John Doe'
-      });
+      expect(apiService.getCurrentValue).toHaveBeenCalledWith(mockRequest);
       expect(component.result()).toEqual(mockResponse);
       expect(component.loading()).toBe(false);
       expect(component.error()).toBeNull();
+      expect(component.currentCurrency()).toBe('USD');
       done();
     }, 100);
   });
 
-  it('should not submit invalid form', () => {
-    const mockForm = { valid: false } as any;
-    
-    component.submit(mockForm);
-
-    expect(apiService.getCurrentValue).not.toHaveBeenCalled();
-  });
-
   it('should handle error on submit', (done) => {
+    const mockRequest: CurrencyRequestDto = {
+      currency: 'XXX',
+      name: 'John Doe'
+    };
     const mockError = {
       error: {
         error: 'Currency Not Found',
@@ -111,21 +105,20 @@ describe('AppComponent', () => {
     
     apiService.getCurrentValue.and.returnValue(throwError(() => mockError));
 
-    const mockForm = { valid: true } as any;
-    component.currency.set('XXX');
-    component.name.set('John Doe');
-
-    component.submit(mockForm);
+    component.onSubmit(mockRequest);
 
     setTimeout(() => {
       expect(component.error()).toBe('Currency not found: XXX');
       expect(component.loading()).toBe(false);
-      expect(component.result()).toBeNull();
       done();
     }, 100);
   });
 
   it('should handle validation errors', (done) => {
+    const mockRequest: CurrencyRequestDto = {
+      currency: 'E',
+      name: 'Test'
+    };
     const mockError = {
       error: {
         error: 'Validation Failed',
@@ -139,8 +132,7 @@ describe('AppComponent', () => {
     
     apiService.getCurrentValue.and.returnValue(throwError(() => mockError));
 
-    const mockForm = { valid: true } as any;
-    component.submit(mockForm);
+    component.onSubmit(mockRequest);
 
     setTimeout(() => {
       expect(component.validationErrors()).toBeTruthy();
@@ -149,11 +141,31 @@ describe('AppComponent', () => {
     }, 100);
   });
 
-  it('should navigate to next page', () => {
+  it('should handle page change', () => {
     const mockResponse = {
       content: [],
       totalElements: 100,
       totalPages: 5,
+      size: 20,
+      number: 2,
+      first: false,
+      last: false
+    };
+    
+    apiService.getRequests.and.returnValue(of(mockResponse));
+
+    component.onPageChange(2);
+
+    expect(apiService.getRequests).toHaveBeenCalledWith(2, 20);
+  });
+
+  it('should update page state after loading requests', (done) => {
+    const mockResponse = {
+      content: [
+        { currency: 'EUR', name: 'Test', date: '2024-01-01', value: 4.25 }
+      ],
+      totalElements: 50,
+      totalPages: 3,
       size: 20,
       number: 1,
       first: false,
@@ -161,78 +173,15 @@ describe('AppComponent', () => {
     };
     
     apiService.getRequests.and.returnValue(of(mockResponse));
-    component.currentPage.set(0);
-    component.totalPages.set(5);
 
-    component.nextPage();
-
-    expect(apiService.getRequests).toHaveBeenCalledWith(1, 20);
-  });
-
-  it('should navigate to previous page', () => {
-    const mockResponse = {
-      content: [],
-      totalElements: 100,
-      totalPages: 5,
-      size: 20,
-      number: 0,
-      first: true,
-      last: false
-    };
-    
-    apiService.getRequests.and.returnValue(of(mockResponse));
-    component.currentPage.set(1);
-
-    component.previousPage();
-
-    expect(apiService.getRequests).toHaveBeenCalledWith(0, 20);
-  });
-
-  it('should not go to previous page when on first page', () => {
-    component.currentPage.set(0);
-    apiService.getRequests.calls.reset();
-
-    component.previousPage();
-
-    expect(apiService.getRequests).not.toHaveBeenCalled();
-  });
-
-  it('should not go to next page when on last page', () => {
-    component.currentPage.set(4);
-    component.totalPages.set(5);
-    apiService.getRequests.calls.reset();
-
-    component.nextPage();
-
-    expect(apiService.getRequests).not.toHaveBeenCalled();
-  });
-
-  it('should trim and uppercase currency code', (done) => {
-    const mockResponse = { value: 4.25 };
-    const mockPageResponse = {
-      content: [],
-      totalElements: 0,
-      totalPages: 0,
-      size: 20,
-      number: 0,
-      first: true,
-      last: true
-    };
-    
-    apiService.getCurrentValue.and.returnValue(of(mockResponse));
-    apiService.getRequests.and.returnValue(of(mockPageResponse));
-
-    const mockForm = { valid: true } as any;
-    component.currency.set(' eur ');
-    component.name.set(' John Doe ');
-
-    component.submit(mockForm);
+    component.onPageChange(1);
 
     setTimeout(() => {
-      expect(apiService.getCurrentValue).toHaveBeenCalledWith({
-        currency: 'EUR',
-        name: 'John Doe'
-      });
+      expect(component.requests().length).toBe(1);
+      expect(component.currentPage()).toBe(1);
+      expect(component.totalPages()).toBe(3);
+      expect(component.totalElements()).toBe(50);
+      expect(component.loadingRequests()).toBe(false);
       done();
     }, 100);
   });

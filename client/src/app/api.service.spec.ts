@@ -1,7 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { ApiService, CurrencyRequestDto, CurrencyResponseDto, PageResponse, CurrencyQueryLogResponseDto } from './api.service';
+import { ApiService } from './api.service';
+import { 
+  CurrencyRequestDto, 
+  CurrencyResponseDto, 
+  PageResponse, 
+  CurrencyQueryLogResponseDto 
+} from './models/currency.models';
 
 describe('ApiService', () => {
   let service: ApiService;
