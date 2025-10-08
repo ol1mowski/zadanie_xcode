@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.taskxcode.task_xcode.exception.CurrencyNotFoundException;
 import com.taskxcode.task_xcode.exception.ExternalApiException;
 
+
 @Component
 public class NbpClient {
 
