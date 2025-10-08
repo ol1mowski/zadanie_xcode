@@ -1,42 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
-
-export interface CurrencyRequestDto {
-  currency: string;
-  name: string;
-}
-
-export interface CurrencyResponseDto {
-  value: number;
-}
-
-export interface CurrencyQueryLogResponseDto {
-  currency: string;
-  name: string;
-  date: string; 
-  value: number | null;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-  first: boolean;
-  last: boolean;
-}
-
-export interface ErrorResponse {
-  error: string;
-  message: string;
-  status: number;
-  timestamp: string;
-  validationErrors?: Array<{ field: string; message: string }>;
-}
+import {
+  CurrencyRequestDto,
+  CurrencyResponseDto,
+  CurrencyQueryLogResponseDto,
+  PageResponse
+} from './models/currency.models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {

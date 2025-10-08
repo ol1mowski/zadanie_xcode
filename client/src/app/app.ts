@@ -1,32 +1,38 @@
 import { Component, signal, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { FormsModule, NgForm } from '@angular/forms';
-import { AsyncPipe, DatePipe, JsonPipe } from '@angular/common';
+import { ApiService } from './api.service';
 import { 
-  ApiService, 
   CurrencyQueryLogResponseDto, 
   CurrencyRequestDto, 
   CurrencyResponseDto,
   PageResponse,
-  ErrorResponse
-} from './api.service';
+  ErrorResponse,
+  ValidationError
+} from './models/currency.models';
+import { CurrencyFormComponent } from './components/currency-form/currency-form.component';
+import { CurrencyResultComponent } from './components/currency-result/currency-result.component';
+import { ErrorMessageComponent } from './components/error-message/error-message.component';
+import { RequestsTableComponent } from './components/requests-table/requests-table.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, FormsModule, AsyncPipe, DatePipe, JsonPipe],
+  standalone: true,
+  imports: [
+    CurrencyFormComponent,
+    CurrencyResultComponent,
+    ErrorMessageComponent,
+    RequestsTableComponent
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class AppComponent implements OnInit {
-  protected readonly title = signal('xcode_task');
-
-  currency = signal<string>('EUR');
-  name = signal<string>('Jan Nowak');
   loading = signal<boolean>(false);
-  loadingRequests = signal<boolean>(false);
   error = signal<string | null>(null);
-  validationErrors = signal<Array<{ field: string; message: string }> | null>(null);
+  validationErrors = signal<ValidationError[] | null>(null);
   result = signal<CurrencyResponseDto | null>(null);
+  currentCurrency = signal<string>('');
+
+  loadingRequests = signal<boolean>(false);
   requests = signal<CurrencyQueryLogResponseDto[]>([]);
   currentPage = signal<number>(0);
   totalPages = signal<number>(0);
@@ -38,21 +44,13 @@ export class AppComponent implements OnInit {
     this.loadRequests();
   }
 
-  submit(form: NgForm): void {
-    if (!form.valid) {
-      return;
-    }
-
+  onSubmit(request: CurrencyRequestDto): void {
     this.error.set(null);
     this.validationErrors.set(null);
     this.loading.set(true);
-    
-    const payload: CurrencyRequestDto = { 
-      currency: this.currency().toUpperCase().trim(), 
-      name: this.name().trim() 
-    };
+    this.currentCurrency.set(request.currency);
 
-    this.api.getCurrentValue(payload).subscribe({
+    this.api.getCurrentValue(request).subscribe({
       next: (res) => {
         this.result.set(res);
         this.loading.set(false);
@@ -60,14 +58,22 @@ export class AppComponent implements OnInit {
       },
       error: (err) => {
         const errorResponse: ErrorResponse = err?.error;
-        this.error.set(errorResponse?.message || errorResponse?.error || 'Wystąpił błąd podczas pobierania kursu');
+        this.error.set(
+          errorResponse?.message || 
+          errorResponse?.error || 
+          'Wystąpił błąd podczas pobierania kursu'
+        );
         this.validationErrors.set(errorResponse?.validationErrors || null);
         this.loading.set(false);
       }
     });
   }
 
-  loadRequests(page: number = 0): void {
+  onPageChange(page: number): void {
+    this.loadRequests(page);
+  }
+
+  private loadRequests(page: number = 0): void {
     this.loadingRequests.set(true);
     
     this.api.getRequests(page, 20).subscribe({
@@ -84,17 +90,5 @@ export class AppComponent implements OnInit {
         this.loadingRequests.set(false);
       }
     });
-  }
-
-  nextPage(): void {
-    if (this.currentPage() < this.totalPages() - 1) {
-      this.loadRequests(this.currentPage() + 1);
-    }
-  }
-
-  previousPage(): void {
-    if (this.currentPage() > 0) {
-      this.loadRequests(this.currentPage() - 1);
-    }
   }
 }

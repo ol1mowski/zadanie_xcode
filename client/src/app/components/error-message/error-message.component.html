@@ -1,0 +1,12 @@
+@if (error()) {
+  <div class="error-box">
+    <strong>Błąd:</strong> {{ error() }}
+    @if (validationErrors() && validationErrors()!.length > 0) {
+      <ul>
+        @for (err of validationErrors(); track err.field) {
+          <li>{{ err.field }}: {{ err.message }}</li>
+        }
+      </ul>
+    }
+  </div>
+}

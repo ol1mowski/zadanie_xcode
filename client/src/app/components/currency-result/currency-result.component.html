@@ -1,0 +1,6 @@
+@if (result()) {
+  <div class="success-box">
+    Aktualny kurs <strong>{{ currencyCode().toUpperCase() }}</strong>: 
+    <strong class="rate-value">{{ result()?.value }} PLN</strong>
+  </div>
+}

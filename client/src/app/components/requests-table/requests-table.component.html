@@ -1,0 +1,58 @@
+<div class="section-header">
+  <h2>Historia zapytań</h2>
+  @if (totalElements() > 0) {
+    <span class="count-badge">{{ totalElements() }} zapytań</span>
+  }
+</div>
+
+@if (loading()) {
+  <div class="loading-box">Ładowanie historii...</div>
+} @else if (requests().length) {
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Waluta</th>
+          <th>Użytkownik</th>
+          <th>Data</th>
+          <th>Wartość</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of requests(); track r.date + r.currency) {
+          <tr>
+            <td><span class="currency-badge">{{ r.currency }}</span></td>
+            <td>{{ r.name }}</td>
+            <td>{{ r.date | date:'dd.MM.yyyy HH:mm' }}</td>
+            <td class="value-cell">{{ r.value }} PLN</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="pagination">
+      <button 
+        (click)="onPreviousPage()" 
+        [disabled]="currentPage() === 0"
+        class="pagination-btn">
+        ← Poprzednia
+      </button>
+      <span class="pagination-info">
+        Strona {{ currentPage() + 1 }} z {{ totalPages() }}
+      </span>
+      <button 
+        (click)="onNextPage()" 
+        [disabled]="currentPage() >= totalPages() - 1"
+        class="pagination-btn">
+        Następna →
+      </button>
+    </div>
+  }
+} @else {
+  <div class="empty-state">
+    <p>Brak zapisanych zapytań.</p>
+    <p class="empty-hint">Wprowadź kod waluty powyżej, aby zobaczyć historię.</p>
+  </div>
+}

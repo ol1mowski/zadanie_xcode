@@ -1,0 +1,42 @@
+<form (ngSubmit)="onSubmit(f)" #f="ngForm" class="form-grid">
+  <label>
+    <span>Kod waluty <span class="required">*</span></span>
+    <input 
+      name="currency" 
+      [ngModel]="currency()" 
+      (ngModelChange)="currency.set($event)" 
+      placeholder="EUR" 
+      required 
+      minlength="3"
+      maxlength="3"
+      pattern="[A-Za-z]{3}"
+      #currencyInput="ngModel" />
+    @if (currencyInput.invalid && currencyInput.touched) {
+      <span class="error-text">Kod waluty musi składać się z 3 liter</span>
+    }
+  </label>
+  
+  <label>
+    <span>Imię i nazwisko <span class="required">*</span></span>
+    <input 
+      name="name" 
+      [ngModel]="name()" 
+      (ngModelChange)="name.set($event)" 
+      placeholder="Jan Nowak" 
+      required 
+      minlength="2"
+      maxlength="100"
+      #nameInput="ngModel" />
+    @if (nameInput.invalid && nameInput.touched) {
+      <span class="error-text">Imię i nazwisko jest wymagane (2-100 znaków)</span>
+    }
+  </label>
+  
+  <button type="submit" [disabled]="loading() || f.invalid">
+    @if (loading()) {
+      <span>Ładowanie...</span>
+    } @else {
+      <span>Pobierz kurs</span>
+    }
+  </button>
+</form>
