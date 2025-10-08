@@ -1,12 +1,10 @@
 package com.taskxcode.task_xcode;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
-import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,9 +14,8 @@ import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -44,26 +41,20 @@ class CurrencyControllerTest {
     @Autowired
     private QueryLogRepository queryLogRepository;
 
-    @Autowired
+    @MockitoBean
     private NbpClient nbpClient;
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        NbpClient nbpClient() {
-            return Mockito.mock(NbpClient.class);
-        }
-    }
 
     @BeforeEach
     void setup() {
         queryLogRepository.deleteAll();
+        Mockito.reset(nbpClient);
     }
 
     @Test
     @DisplayName("POST /currencies/get-current-currency-value-command → 200 i zapis do DB")
     void getCurrentCurrency_ok() throws Exception {
-        when(nbpClient.getAverageRateForCode("EUR")).thenReturn(4.25d);
+        BigDecimal expectedRate = new BigDecimal("4.2500");
+        when(nbpClient.getAverageRateForCode("EUR")).thenReturn(expectedRate);
 
         String body = "{" +
                 "\"currency\":\"EUR\"," +
@@ -74,14 +65,14 @@ class CurrencyControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.value", is(closeTo(4.25d, 0.0001))));
+                .andExpect(jsonPath("$.value").value(4.25));
 
         var all = queryLogRepository.findAll();
         org.junit.jupiter.api.Assertions.assertEquals(1, all.size());
         QueryLog log = all.get(0);
         org.junit.jupiter.api.Assertions.assertEquals("EUR", log.getCurrencyCode());
         org.junit.jupiter.api.Assertions.assertEquals("Jan Nowak", log.getRequesterName());
-        org.junit.jupiter.api.Assertions.assertEquals(4.25d, log.getValue());
+        org.junit.jupiter.api.Assertions.assertEquals(0, expectedRate.compareTo(log.getValue()));
         org.junit.jupiter.api.Assertions.assertNotNull(log.getCreatedAt());
     }
 
@@ -99,26 +90,46 @@ class CurrencyControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error", containsString("Currency not found")));
+                .andExpect(jsonPath("$.error", containsString("Currency Not Found")))
+                .andExpect(jsonPath("$.message", containsString("Currency not found")));
     }
 
     @Test
-    @DisplayName("GET /currencies/requests → 200 i zwrot listy zapytań")
+    @DisplayName("GET /currencies/requests → 200 i zwrot strony zapytań z paginacją")
     void getRequests_ok() throws Exception {
         QueryLog log = new QueryLog();
         log.setRequesterName("Anna Kowalska");
         log.setCurrencyCode("USD");
-        log.setValue(3.99d);
+        log.setValue(new BigDecimal("3.9900"));
         log.setCreatedAt(OffsetDateTime.now());
         queryLogRepository.save(log);
 
         mockMvc.perform(get("/currencies/requests"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].currency", notNullValue()))
-                .andExpect(jsonPath("$[0].name", notNullValue()))
-                .andExpect(jsonPath("$[0].date", notNullValue()))
-                .andExpect(jsonPath("$[0].value", notNullValue()));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].currency", notNullValue()))
+                .andExpect(jsonPath("$.content[0].name", notNullValue()))
+                .andExpect(jsonPath("$.content[0].date", notNullValue()))
+                .andExpect(jsonPath("$.content[0].value", notNullValue()))
+                .andExpect(jsonPath("$.totalElements").value(greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.size").exists())
+                .andExpect(jsonPath("$.number").exists());
+    }
+    
+    @Test
+    @DisplayName("POST /currencies/get-current-currency-value-command → 400 dla nieprawidłowej walidacji")
+    void getCurrentCurrency_validationError() throws Exception {
+        String body = "{" +
+                "\"currency\":\"E\"," +  // Za krótki kod waluty
+                "\"name\":\"\"" +         // Pusta nazwa
+                "}";
+
+        mockMvc.perform(post("/currencies/get-current-currency-value-command")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("Validation Failed")))
+                .andExpect(jsonPath("$.validationErrors").isArray());
     }
 }
 

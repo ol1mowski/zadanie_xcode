@@ -1,14 +1,19 @@
 package com.taskxcode.task_xcode.service;
 
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,6 +24,7 @@ import com.taskxcode.task_xcode.dto.CurrencyRequest;
 import com.taskxcode.task_xcode.dto.CurrencyResponse;
 import com.taskxcode.task_xcode.entity.QueryLog;
 import com.taskxcode.task_xcode.exception.CurrencyNotFoundException;
+import com.taskxcode.task_xcode.mapper.CurrencyMapper;
 import com.taskxcode.task_xcode.repository.QueryLogRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,13 +36,24 @@ class CurrencyServiceTest {
     @Mock
     private QueryLogRepository queryLogRepository;
 
-    @InjectMocks
+    @Mock
+    private CurrencyMapper currencyMapper;
+
+    private Clock clock;
+
     private CurrencyService currencyService;
+
+    @BeforeEach
+    void setUp() {
+        clock = Clock.fixed(Instant.parse("2024-01-01T10:00:00Z"), ZoneId.systemDefault());
+        currencyService = new CurrencyService(nbpClient, queryLogRepository, currencyMapper, clock);
+    }
 
     @Test
     @DisplayName("Zwraca kurs i zapisuje log w repozytorium")
     void returnsRateAndSavesLog() {
-        when(nbpClient.getAverageRateForCode("EUR")).thenReturn(4.5d);
+        BigDecimal expectedRate = new BigDecimal("4.5000");
+        when(nbpClient.getAverageRateForCode("EUR")).thenReturn(expectedRate);
 
         CurrencyRequest req = new CurrencyRequest();
         req.setCurrency("EUR");
@@ -45,14 +62,14 @@ class CurrencyServiceTest {
         CurrencyResponse resp = currencyService.getCurrentValue(req);
 
         assertNotNull(resp);
-        assertEquals(4.5d, resp.getValue(), 0.0001);
+        assertEquals(expectedRate, resp.getValue());
 
         ArgumentCaptor<QueryLog> captor = ArgumentCaptor.forClass(QueryLog.class);
         verify(queryLogRepository).save(captor.capture());
         QueryLog saved = captor.getValue();
         assertEquals("EUR", saved.getCurrencyCode());
         assertEquals("Jan Nowak", saved.getRequesterName());
-        assertEquals(4.5d, saved.getValue(), 0.0001);
+        assertEquals(expectedRate, saved.getValue());
         assertNotNull(saved.getCreatedAt());
     }
 
