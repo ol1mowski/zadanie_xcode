@@ -88,7 +88,7 @@ mvn -v           # Powinno pokazać Maven 3.6+
 
 ### 1️⃣ Sklonuj repozytorium
 ```bash
-git clone <URL_REPOZYTORIUM>
+git clone https://github.com/ol1mowski/zadanie_xcode.git
 cd zadanie_xcode
 ```
 
@@ -99,10 +99,10 @@ cd zadanie_xcode
 cd server
 
 # Zbuduj projekt (pobierze zależności)
-mvn clean install
+./mvnw clean install
 
 # Uruchom aplikację
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 **Backend będzie dostępny pod adresem:** `http://localhost:8080`
