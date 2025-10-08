@@ -47,6 +47,7 @@ Aplikacja umożliwia:
 - **Spring Boot 3.4.0**
 - **Spring Web** - REST API
 - **Spring Data JPA** - dostęp do bazy danych
+- **Spring Security** - bezpieczeństwo aplikacji
 - **H2 Database** - baza danych in-memory
 - **Spring Cache + Caffeine** - cachowanie
 - **Spring Validation** - walidacja danych
@@ -358,6 +359,14 @@ Po uruchomieniu backendu, dokumentacja API jest dostępna pod adresem:
 
 ### Zaimplementowane zabezpieczenia:
 
+✅ **Spring Security**
+- Konfiguracja SecurityFilterChain
+- Stateless session management (REST API)
+- CSRF protection (wyłączone dla REST API)
+- CORS policy (globalna konfiguracja)
+- Publiczne endpointy bez autentykacji
+- Gotowość do dodania JWT/OAuth2
+
 ✅ **Walidacja danych wejściowych**
 - `@Valid` + Bean Validation (JSR-380)
 - Regex dla kodu waluty (3 litery)
@@ -380,7 +389,9 @@ Po uruchomieniu backendu, dokumentacja API jest dostępna pod adresem:
 
 ✅ **CORS**
 - Skonfigurowane dla `http://localhost:4200`
-- Tylko niezbędne metody HTTP
+- Dozwolone metody: GET, POST, PUT, DELETE, OPTIONS
+- Credentials support
+- Preflight caching (1h)
 
 ---
 
@@ -510,13 +521,16 @@ npm test -- --browsers=Firefox
 
 ### Możliwe rozszerzenia:
 
-- 🔐 Autentykacja i autoryzacja (Spring Security, JWT)
+- 🔐 JWT Authentication (Spring Security + JWT tokens)
+- 👥 Role-based Access Control (RBAC)
 - 💾 Baza danych produkcyjna (PostgreSQL, MySQL)
 - 🐳 Dockeryzacja (Docker Compose)
 - 🚀 CI/CD (GitHub Actions, Jenkins)
 - 📊 Monitoring (Actuator, Prometheus, Grafana)
 - 🌍 Internationalization (i18n)
 - 📱 Progressive Web App (PWA)
+- 🔄 Rate Limiting (Bucket4j)
+- 📧 Email notifications
 
 ---
 
